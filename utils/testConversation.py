@@ -24,16 +24,18 @@ import pandas as pd
 from argparse import ArgumentParser
 import aiohttp
 
-from __init__ import UTF_8, CONFIDENCE_COLUMN, \
-    UTTERANCE_COLUMN, PREDICTED_INTENT_COLUMN, \
+from __init__ import UTF_8, CONFIDENCE_COLUMN1, CONFIDENCE_COLUMN2, CONFIDENCE_COLUMN3, \
+    UTTERANCE_COLUMN, PREDICTED_INTENT_COLUMN1, PREDICTED_INTENT_COLUMN2, PREDICTED_INTENT_COLUMN3, \
     DETECTED_ENTITY_COLUMN, DIALOG_RESPONSE_COLUMN, \
     marshall_entity, save_dataframe_as_csv, INTENT_JUDGE_COLUMN, \
     TEST_OUT_FILENAME, BOOL_MAP, WCS_VERSION, BASE_URL, \
     parse_partial_credit_table, SCORE_COLUMN
 
-test_out_header = [PREDICTED_INTENT_COLUMN, CONFIDENCE_COLUMN,
-                   DETECTED_ENTITY_COLUMN, DIALOG_RESPONSE_COLUMN,
-                   SCORE_COLUMN]
+test_out_header = [PREDICTED_INTENT_COLUMN1, CONFIDENCE_COLUMN1, 
+                    PREDICTED_INTENT_COLUMN2, CONFIDENCE_COLUMN2, 
+                    PREDICTED_INTENT_COLUMN3, CONFIDENCE_COLUMN3,
+                    DETECTED_ENTITY_COLUMN, DIALOG_RESPONSE_COLUMN,
+                    SCORE_COLUMN]
 
 MSG_ENDPOINT = BASE_URL + '/v1/workspaces/{}/message?version={}'
 MAX_RETRY_LIMIT = 5
@@ -72,10 +74,23 @@ async def fill_df(utterance, row_idx, out_df, workspace_id, wa_username,
                                     'alternate_intents': True}, url, sem)
         intents = resp['intents']
         if len(intents) != 0:
-            out_df.loc[row_idx, PREDICTED_INTENT_COLUMN] = \
+            out_df.loc[row_idx, PREDICTED_INTENT_COLUMN1] = \
                 intents[0]['intent']
-            out_df.loc[row_idx, CONFIDENCE_COLUMN] = \
+            out_df.loc[row_idx, CONFIDENCE_COLUMN1] = \
                 intents[0]['confidence']
+
+        if len(intents) >= 2:
+            out_df.loc[row_idx, PREDICTED_INTENT_COLUMN2] = \
+                intents[1]['intent']
+            out_df.loc[row_idx, CONFIDENCE_COLUMN2] = \
+                intents[1]['confidence']
+
+        if len(intents) >= 3:
+            out_df.loc[row_idx, PREDICTED_INTENT_COLUMN3] = \
+                intents[2]['intent']
+            out_df.loc[row_idx, CONFIDENCE_COLUMN3] = \
+                intents[2]['confidence']
+
 
         out_df.loc[row_idx, DETECTED_ENTITY_COLUMN] = \
             marshall_entity(resp['entities'])

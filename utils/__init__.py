@@ -29,10 +29,17 @@ TRAIN_ENTITY_FILENAME = 'entity-train.csv'
 
 # CSV column names
 INTENT_COLUMN = 'intent'
-CONFIDENCE_COLUMN = 'confidence'
+CONFIDENCE_COLUMN1 = 'confidence 1'
+CONFIDENCE_COLUMN2 = 'confidence 2'
+CONFIDENCE_COLUMN3 = 'confidence 3'
+
 UTTERANCE_COLUMN = 'utterance'  # used in any intermediate file
 INTENT_JUDGE_COLUMN = 'does intent match'
-PREDICTED_INTENT_COLUMN = 'predicted intent'
+
+PREDICTED_INTENT_COLUMN1 = 'predicted intent 1'
+PREDICTED_INTENT_COLUMN2 = 'predicted intent 2'
+PREDICTED_INTENT_COLUMN3 = 'predicted intent 3'
+
 DETECTED_ENTITY_COLUMN = 'detected entity'
 DIALOG_RESPONSE_COLUMN = 'dialog response'
 GOLDEN_INTENT_COLUMN = 'golden intent'
