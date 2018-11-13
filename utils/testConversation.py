@@ -25,7 +25,7 @@ from argparse import ArgumentParser
 import aiohttp
 
 from __init__ import UTF_8, CONFIDENCE_COLUMN1, CONFIDENCE_COLUMN2, CONFIDENCE_COLUMN3, \
-    UTTERANCE_COLUMN, PREDICTED_INTENT_COLUMN1, PREDICTED_INTENT_COLUMN2, PREDICTED_INTENT_COLUMN3, \
+    UTTERANCE_COLUMN, APPSOURCE_COLUMN, PREDICTED_INTENT_COLUMN1, PREDICTED_INTENT_COLUMN2, PREDICTED_INTENT_COLUMN3, \
     DETECTED_ENTITY_COLUMN, DIALOG_RESPONSE_COLUMN, \
     marshall_entity, save_dataframe_as_csv, INTENT_JUDGE_COLUMN, \
     TEST_OUT_FILENAME, BOOL_MAP, WCS_VERSION, BASE_URL, \
@@ -62,7 +62,7 @@ async def post(session, json, url, sem):
                 print(counter)
 
 
-async def fill_df(utterance, row_idx, out_df, workspace_id, wa_username,
+async def fill_df(utterance, appsource, row_idx, out_df, workspace_id, wa_username,
                   wa_password, sem):
     """ Send utterance to Assistant and save response to dataframe
     """
@@ -70,8 +70,16 @@ async def fill_df(utterance, row_idx, out_df, workspace_id, wa_username,
             auth=aiohttp.BasicAuth(wa_username, wa_password)) as session:
         url = MSG_ENDPOINT.format(workspace_id, WCS_VERSION)
 
-        resp = await post(session, {'input': {'text': utterance},
-                                    'alternate_intents': True}, url, sem)
+        # print('appsource ' + appsource + ' - utterance ' + utterance)
+
+        inputObject = {'input': {'text': utterance},
+                                    'alternate_intents': True,
+                                    'context': {'appSource': '"' + appsource + '"'}
+                                    }
+        print('inputObject')
+        print(inputObject)
+
+        resp = await post(session, inputObject, url, sem)
         intents = resp['intents']
         if len(intents) != 0:
             out_df.loc[row_idx, PREDICTED_INTENT_COLUMN1] = \
@@ -107,19 +115,26 @@ def func(args):
     in_df = None
     out_df = None
     test_column = UTTERANCE_COLUMN
+    appsource_column = APPSOURCE_COLUMN
+
     if args.test_column is not None:  # Test input has multiple columns
         test_column = args.test_column
         in_df = pd.read_csv(args.infile, quoting=csv.QUOTE_ALL,
                             encoding=UTF_8, keep_default_na=False)
+
         if test_column not in in_df:  # Look for target test_column
             raise ValueError(
                 "Test column {} doesn't exist in file.".format(test_column))
+
+        if appsource_column not in in_df:  # Look for target test_column
+            raise ValueError(
+                "App Source column {} doesn't exist in file.".format(appsource_column))
 
         if args.merge_input:  # Merge rest of columns from input to output
             out_df = in_df
         else:
             out_df = in_df[[test_column]].copy()
-            out_df.columns = [test_column]
+            out_df.columns = [test_column, appsource_column]
 
     else:
         test_series = pd.read_csv(args.infile, quoting=csv.QUOTE_ALL,
@@ -129,7 +144,7 @@ def func(args):
             raise ValueError('Unknown test column')
         # Test input has only one column and no header
         out_df = test_series.to_frame()
-        out_df.columns = [test_column]
+        out_df.columns = [test_column, appsource_column]
 
     # Initial columns for test output
     for column in test_out_header:
@@ -140,6 +155,7 @@ def func(args):
     loop = asyncio.get_event_loop()
 
     tasks = (fill_df(out_df.loc[row_idx, test_column],
+                     out_df.loc[row_idx, appsource_column],
                      row_idx, out_df, args.workspace_id,
                      args.username, args.password, sem)
              for row_idx in range(out_df.shape[0]))

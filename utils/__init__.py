@@ -34,6 +34,7 @@ CONFIDENCE_COLUMN2 = 'confidence 2'
 CONFIDENCE_COLUMN3 = 'confidence 3'
 
 UTTERANCE_COLUMN = 'utterance'  # used in any intermediate file
+APPSOURCE_COLUMN = 'appSource'
 INTENT_JUDGE_COLUMN = 'does intent match'
 
 PREDICTED_INTENT_COLUMN1 = 'predicted intent 1'
